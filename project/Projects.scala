@@ -1,6 +1,5 @@
 import com.typesafe.sbt.SbtScalariform.{ ScalariformKeys, scalariformSettings }
 import org.scalajs.sbtplugin.ScalaJSPlugin
-import bintray.BintrayKeys._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
@@ -10,12 +9,13 @@ object Projects {
   val projectName = "scala-js-react"
 
   object Versions {
-    val app = "1.0.2"
-    val scalaVersions = Seq("2.11.8", "2.12.2")
+    val app = "1.0.3"
+    val scalaVersions = Seq("2.11.11", "2.12.3")
   }
 
   private[this] val commonSettings = Seq(
     version := Versions.app,
+    scalaVersion := "2.12.3",
     crossScalaVersions := Versions.scalaVersions,
     scalacOptions ++= Seq(
       "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked", "–Xcheck-null", "-Xfatal-warnings", /* "-Xlint", */
@@ -24,30 +24,24 @@ object Projects {
     scalacOptions in (Compile, doc) := Seq("-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in Test ++= Seq("-Yrangepos"),
 
-    shellPrompt := { state => s"[${Project.extract(state).currentProject.id}] $$ " },
-    resolvers += Resolver.jcenterRepo,
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
+    shellPrompt := { state => s"${Project.extract(state).currentProject.id}> " },
+    resolvers ++= List(Resolver.jcenterRepo, Resolver.bintrayRepo("cuzfrog", "maven"))
   ) ++ scalariformSettings
 
   private[this] val scalaJsSettings = Seq(
     name := projectName,
-    organization := "com.definitelyscala",
-    homepage := Some(url("https://github.com/DefinitelyScala/scala-js-react")),
-    scmInfo := Some(ScmInfo(
-      url("https://github.com/DefinitelyScala/scala-js-react"),
-      "scm:git:git@github.com:DefinitelyScala/scala-js-react.git",
-      Some("scm:git:git@github.com:DefinitelyScala/scala-js-react.git")
-    )),
-    bintrayOrganization := Some("definitelyscala"),
-    bintrayPackageLabels := Seq("scala", "scala.js"),
-    bintrayPackage := "scala-js-react",
-    bintrayRepository := "maven",
-    bintrayVcsUrl := Some("git:git@github.com:DefinitelyScala/scala-js-react.git"),
-    publishMavenStyle := true,
-    licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+    organization := "com.github.cuzfrog",
     libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.2"),
     scalaJSStage in Global := FastOptStage
   )
 
-  lazy val react: Project = Project(id = projectId, base = file(".")).settings(commonSettings ++ scalaJsSettings).enablePlugins(ScalaJSPlugin)
+  val publicationSettings = Seq(
+    licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0")),
+    publishMavenStyle := true,
+    publishTo := Some("My Bintray" at s"https://api.bintray.com/maven/cuzfrog/maven/${name.value}/;publish=1")
+  )
+
+  lazy val react: Project = Project(id = projectId, base = file("."))
+    .settings(commonSettings ++ scalaJsSettings)
+    .enablePlugins(ScalaJSPlugin)
 }
